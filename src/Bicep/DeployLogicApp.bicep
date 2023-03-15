@@ -1,3 +1,6 @@
+@description('Required: No | Subscription ID of the Azure Virtual Desktop Host Pool. | Default: The subscription ID of the resource group.')
+param SubscriptionId string = subscription().subscriptionId
+
 @description('The region where resources are stored')
 param Location string = resourceGroup().location
 
@@ -7,14 +10,17 @@ param LogicAppName string
 @description('The time of day to trigger the logic app. (Default: 0 = midnight)')
 param TriggerTime string = '0' // 0 = midnight, 1 = 1am, 2 = 2am, etc...
 
-@description('The time zone of the trigger time. (Default: GMT Standard Time)')
-param TriggerTimeZone string = 'GMT Standard Time'
+@description('The time zone of the trigger time. (Default: Central Standard Time)')
+param TriggerTimeZone string = 'Central Standard Time'
 
 @description('The resource Id of the storage accounts to resize.')
 param StorageAccountIds array = []
 
 @description('The target free space (buffer) in GB. (Default: 50GB)')
 param TargetFreeSpaceGB int = 50
+
+@description('Id of the built-in Contributor role in your subscription')
+param RoleDefinitionId string // Lookup Contributor Role Id In Storage Account Subscription
 
 var varLogicAppDefinition = {
   '$schema': 'https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#'
@@ -462,6 +468,7 @@ var varLogicAppDefinition = {
     }
   }
 }
+
 resource deployLogicApp 'Microsoft.Logic/workflows@2019-05-01' = {
   location: Location
   name: LogicAppName
@@ -469,9 +476,20 @@ resource deployLogicApp 'Microsoft.Logic/workflows@2019-05-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    state: 'Enabled'
+    state: 'Disabled' // If set to enabled trigger will immediately execute workflow after deployment
     definition: any(varLogicAppDefinition)
     parameters: {}
+  }
+}
+
+module RBACFunctionAppContributor 'Modules/RBACRoleAssignment.bicep' = {
+  dependsOn: [deployLogicApp]
+  name: 'RBACFunctionAppContributor'
+  scope: subscription()
+  params: {
+    PrinicpalId: deployLogicApp.identity.principalId
+    RoleDefinitionId: RoleDefinitionId // Subscription Contributor
+    SubscriptionId: SubscriptionId
   }
 }
 

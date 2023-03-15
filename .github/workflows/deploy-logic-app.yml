@@ -1,0 +1,40 @@
+name: DEPLOY-LOGIC-APP
+
+on:
+
+  workflow_dispatch:
+    inputs:
+
+      logic_app_script:
+        description: 'Logic App Deployment Script Name'
+        required: true
+        type: choice
+        options:
+            - "Invoke-DeployLogicApp.ps1"
+
+env:
+    WORK_DIRECTORY: './src/' # Set Working Directory To Resource Group Being Provisioned
+
+jobs:
+
+  bicep:
+    name: 'Deploy Logic App'
+    runs-on: ubuntu-latest
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Login via Az module
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+    
+    - name: Run Azure PowerShell script
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          ./src/${{inputs.logic_app_script}} -AppId "${{secrets.CLIENT_ID}}" -AppSecret "${{secrets.CLIENT_SECRET}}" -TenantId "${{secrets.TENANT_ID}}" -SubscriptionId "${{secrets.SUBSCRIPTION_ID}}"
+        azPSVersion: "latest"
