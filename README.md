@@ -36,7 +36,7 @@ A parameter with no default value means it is required.
 | ----------------- | -------- | ------------------------------------------------------------------------------------------------- | ---------------------- |
 | LogicAppName      | Yes      | The name of the Logic App.                                                                        |                        |
 | StorageAccountIds | Yes      | The resource Id of the storage accounts to resize. All FileShares in these accounts are targeted. |                        |
-| RoleDefinitionId  | Yes      | The Id of the contributor role in the desired subscription                                        |                        |
+| RoleDefinitionId  | Yes      | The Id of the Contributor role in the subscription containg storage acccounts                     |                        |
 | Location          | No       | The region where resources are stored                                                             | Same as resource group |
 | TriggerTime       | No       | The time of day to trigger the logic app.                                                         | 0 = midnight           |
 | TriggerTimeZone   | No       | The time zone of the trigger time.                                                                | Central Standard Time  |
